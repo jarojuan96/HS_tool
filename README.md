@@ -37,7 +37,7 @@ The tool needs user intervation through a GUI. If run directly through terminal 
 Important: change the path of these files according to where you store them in 'variable_definitions.py'
 
 · Not included in the repository:
-- L1 files. You can get them from PRISMA, EMIT, and EnMAP portal. Regarding Gaofen-5A, data was obtained through personal communication with Chinese institutions.
+- L1 files. You can get them from PRISMA (https://prisma.asi.it/missionselect/), EMIT (https://search.earthdata.nasa.gov/), and EnMAP (https://planning.enmap.org/) data portals. Regarding Gaofen-5A, data was obtained through personal communication with Chinese institutions.
 
 # Tool steps (manual intervention):
 
