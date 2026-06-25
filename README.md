@@ -17,7 +17,7 @@ Tool for plume quantification using data from high-resolution imaging spectromet
 
 - Plume quantification is carried out using the IME approach (Frankenberg et al., 2016) and wind speed values are extracted from GEOS-FP (Molod et al., 2012).
 
-- Plume quantification is only allowed for ch4 and nh3, although there might be potential extension to other gases in the future.
+- Plume quantification is only allowed for ch4, nh3, and c2h4, although there might be potential extension to other gases in the future.
 
 - L2 files are stored in ENVI format; L4-related values are stored into a csv file; GPC-based georreferenced retrievals and plume bands are saved as tif files.
 
