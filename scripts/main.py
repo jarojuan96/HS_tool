@@ -16,39 +16,50 @@ from store_results import excel_info #3) Store results into a .csv file
 
 def main (p, n, psave, gas, site):
     
-    print(site)
+    #print(site)
     
     cube, mission = deltax_rets(p, n, psave) #The retrieval is done as long as it is not already done or we don't want to reprocess
     
-    if gas == 'ch4':
-        dxgas = cube[:,:,1] #ch4-MF(ppmm)
+    if gas == 'ch4' or gas == 'c2h4':
+        if gas == 'ch4':
+            dxgas_show = cube[:,:,1] #ch4-MF(ppmm)
+            dxgas_quan = dxgas_show.copy()
+        elif gas == 'c2h4':
+            dxgas_show = cube[:,:,11] #c2h4-MF-SWIR(ppmm)
+            dxgas_quan = cube[:,:,7] #c2h4-MF-2300nm(ppmm)
         rad_ref = cube[:,:,0] #Rad-ref
-        Q, err_Q, u10, err_u10, lat_s, lon_s, ts, bool_det = emission_quantification (dxgas, rad_ref, mission, gas, p, n, psave) #Plume detection - integrated in select_plume function within the 'quant_func_v2'
+        
+        Q, err_Q, u10, err_u10, lat_s, lon_s, ts, bool_det = emission_quantification (dxgas_show, dxgas_quan, rad_ref, mission, gas, p, n, psave) #Plume detection - integrated in select_plume function within the 'quant_func_v2'
                                                                               #If no plume is found. Then, we stop the process.
                                                                               #If it is found, we extract wind direction if not already stored                                                                    
         if bool_det:
             fields = ['Site', 'Mission', 'Timestamp\nYYYYMMDDhhmmss', 'Source-lat(º)', 'Source-lon(º)', 'u10 (m/s)', 'err(u10)', 'Q (kg/h)', 'err(Q)']
             info = [site, mission, ts, round(lat_s,4), round(lon_s,4), round(u10,2), round(err_u10,2), round(Q,2), round(err_Q,2)]
     
-    elif gas == 'nh3':
-        dxgas = cube[:,:,9] #nh3-MF-2300nm(ppmm)
+    elif gas == 'nh3' or gas == 'c2h4':
+        
+        dxgas_show = cube[:,:,19] #nh3-MF-SWIR(ppmm)
+        dxgas_quan = cube[:,:,13] #nh3-MF-2300nm(ppmm)
         rad_ref = cube[:,:,0] #Rad-ref
-        Q_1, err_Q_1, Q_2, err_Q_2, u10, err_u10, lat_s, lon_s, ts, bool_det = emission_quantification (dxgas, rad_ref, mission, gas, p, n, psave) #Q_1 assumes tau = inf and Q_2 tau = 1h
+        
+        Q_1, err_Q_1, Q_2, err_Q_2, u10, err_u10, lat_s, lon_s, ts, bool_det = emission_quantification (dxgas_show, dxgas_quan, rad_ref, mission, gas, p, n, psave) #Q_1 assumes tau = inf and Q_2 tau = 1h
         
         if bool_det:
             fields = ['Site', 'Mission', 'Timestamp\nYYYYMMDDhhmmss', 'Source-lat(º)', 'Source-lon(º)', 'u10 (m/s)', 'err(u10)', 'Q_tau=inf (kg/h)', 'err(Q_tau=inf)', 'Q_tau=1h (kg/h)', 'err(Q_tau=1h)']
             info = [site, mission, ts, round(lat_s,4), round(lon_s,4), round(u10,2), round(err_u10,2), round(Q_1,2), round(err_Q_1,2), round(Q_2,2), round(err_Q_2,2)]
+    
     
     if bool_det:
         excel_info(fields, info, psave, gas)
     
     return
 
+"""
 site = 'Iraq' #name of the location from the acquisition
-gas = 'nh3' #gas of interest (potential plume detection). Potential gases so far: ch4 and nh3
+gas = 'c2h4' #gas of interest (potential plume detection). Potential gases so far: ch4 and nh3
 p = '/home1/jroger/Desktop/postdoc/paper_nh3_c2h4/images/images_nh3/Iraq/emit/' #path to the L1 file
 n = 'EMIT_L1B_RAD_001_20250821T075748_2523305_016' #name of the L1 file without the extension
 psave = '/home1/jroger/Desktop/postdoc/paper_nh3_c2h4/images/output_nh3/' #where all the outputs are saved
 
 main (p, n, psave, gas, site)
-
+"""

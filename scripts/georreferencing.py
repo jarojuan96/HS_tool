@@ -125,6 +125,8 @@ def create_tif_qgis_plume(path_img, name_img, path_ret, name_ret, gas, mask): #P
         key_match = 'nh3-MF-2300nm(ppmm)'
     elif gas == 'ch4':
         key_match = 'ch4-MF(ppmm)'
+    elif gas == 'c2h4':
+        key_match = 'c2h4-MF-2300nm(ppmm)'
     
     for i in range(B):
         
@@ -142,9 +144,18 @@ def create_tif_qgis_plume(path_img, name_img, path_ret, name_ret, gas, mask): #P
             #if i!=0: #Why?
             #    plot[plot<0] = 0    
             data = plot.copy()
+            
+            key_exception = 'GF5'; len_key = len(key_exception)
+            if name_ret[:len_key] == key_exception:
+                data = np.flip(np.flip(data.copy(), axis=1), axis=0)
+                N_new = N
+                M_new = M
+            else:
+                N_new = N
+                M_new = M
         
             driver = gdal.GetDriverByName("GTiff")
-            ds = driver.Create(fn_tif , N, M, 1, gdal.GDT_Float32)    
+            ds = driver.Create(fn_tif , N_new, M_new, 1, gdal.GDT_Float32)    
             band = ds.GetRasterBand(1)
             band.WriteArray(data)
         

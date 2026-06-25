@@ -106,8 +106,19 @@ def gas_processing(img, wvl, fwhm, sza, vza, mission_name, cube, band_names, con
         wvl_inf, wvl_sup = 1000, 1300 #According to Roger et al., (2024), water vapor absorption does not remove the signal
         window = np.where (np.logical_and (wvl_simple >= wvl_inf, wvl_simple <= wvl_sup))[0]; window_list.append(window)
     elif gas == 'c2h4': #Default to SZA = 40º, VZA = 0º, PWV = 3 cm, h = 0 km
-        wvl_inf, wvl_sup = 1600, 1700 #nm (where we have data)
+        #1st version
+        #wvl_inf, wvl_sup = 1600, 1700 #nm (where we have data)
+        #window = np.where (np.logical_and (wvl_simple >= wvl_inf, wvl_simple <= wvl_sup))[0]; window_list.append(window)
+        
+        #2nd version
+        fn_lut_mf = p_lut_mf + 'LUT_ssd_100pm_wvl_1599_2450_nm_c2h4.nc' #Extracted with joint combination of ARTS + Libradtran + HITRAN-supplemet-cross_sections
+        wvl_inf, wvl_sup = 2000, 2450 #2300 - This covers the same bands within the main ch4 window. If those are not corrupted by h2o, these neither.
         window = np.where (np.logical_and (wvl_simple >= wvl_inf, wvl_simple <= wvl_sup))[0]; window_list.append(window)
+        wvl_inf, wvl_sup = 1600, 1700 #1650
+        window = np.where (np.logical_and (wvl_simple >= wvl_inf, wvl_simple <= wvl_sup))[0]; window_list.append(window)
+        wvl_inf, wvl_sup = 1600, 2450 #SWIR
+        window = np.where (np.logical_and (wvl_simple >= wvl_inf, wvl_simple <= wvl_sup))[0]; window_list.append(window)
+        
     elif gas == 'nh3':
         #Balasus (2026) and Ruzicka (2026) do not agree on the selected windows for nh3. I just use an approximated selection, where I do not really account for water vapor absorption
         fn_lut_mf = p_lut_mf + 'LUT_ssd_100pm_wvl_1399_2500_nm_nh3.nc' #Extracted with joint combination of ARTS + Libradtran + HITRAN2024 + H2O MT-CKD
@@ -125,18 +136,20 @@ def gas_processing(img, wvl, fwhm, sza, vza, mission_name, cube, band_names, con
         window = window_list[i_win]
         #print(i_win, window[0], window[-1])
         
+        """
         if gas == 'c2h4': 
             units = 'ppmm'
             wvl_hr, k_hr = np.load(p_lut_mf + 'wvl_c2h4.npy'), np.load(p_lut_mf + 'k_c2h4.npy')
             _, k_arr = convolution_khr(img, wvl, fwhm, wvl_hr, k_hr, window, mission_name)
         else:
-            if gas == 'h2o':
-                units = 'cm'
-                wvl_hr, rad_hr_arr, delta_x_arr = read_luts_libradtran_h2o(fn_lut_mf, sza, vza)
-            else:
-                units = 'ppmm'
-                wvl_hr, rad_hr_arr, delta_x_arr = read_luts_libradtran(fn_lut_mf, sza, vza, d_h2o, h)
-            wvl_ret, k_arr = get_k_libradtran(img, wvl, fwhm, wvl_hr, rad_hr_arr, delta_x_arr, window, mission_name)
+        """
+        if gas == 'h2o':
+            units = 'cm'
+            wvl_hr, rad_hr_arr, delta_x_arr = read_luts_libradtran_h2o(fn_lut_mf, sza, vza)
+        else:
+            units = 'ppmm'
+            wvl_hr, rad_hr_arr, delta_x_arr = read_luts_libradtran(fn_lut_mf, sza, vza, d_h2o, h)
+        wvl_ret, k_arr = get_k_libradtran(img, wvl, fwhm, wvl_hr, rad_hr_arr, delta_x_arr, window, mission_name)
             
         ret = mf_retrieval(img, k_arr, window, mission_name, bool_libradtran=True) #ppmm
         if gas == 'nh3' and i_win == 0:
@@ -146,6 +159,12 @@ def gas_processing(img, wvl, fwhm, sza, vza, mission_name, cube, band_names, con
         elif gas == 'nh3' and i_win == 2:
             name_extension = '-1500nm'
         elif gas == 'nh3' and i_win == 3:
+            name_extension = '-SWIR'
+        elif gas == 'c2h4' and i_win == 0:
+            name_extension = '-2300nm'
+        elif gas == 'c2h4' and i_win == 1:
+            name_extension = '-1650nm'
+        elif gas == 'c2h4' and i_win == 2:
             name_extension = '-SWIR'
         else:
             name_extension = ''
@@ -196,11 +215,13 @@ def deltax_rets(p, n, path_save): #Main function to extract the gas concentratio
     print(n)
     
     
-    bool_match = True
+    bool_match = False
     match_repeat = False
     
     content = os.listdir(path_save)
     key = n +'_tool4'; len_key = len(key)
+    #print(path_save)
+    #print(content)
     for c in content:
         if c[:len_key] == key:
             bool_match = True
